@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: private-link-demo
+  labels:
+    app: private-link-demo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: private-link-demo
+      labels:
+        app: private-link-demo
+    spec:
+      containers:
+        - name: private-link-demo
+          image: rancher/hello-world
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: private-link-demo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: private-link-demo
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+    #https://cloud-provider-azure.sigs.k8s.io/topics/pls-integration/
+    service.beta.kubernetes.io/azure-pls-create: "true"
+    #create private link service with name private-link-demo
+    service.beta.kubernetes.io/azure-pls-name: "private-link-demo"
+spec:
+  selector:
+    app: private-link-demo
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+  type: LoadBalancer
